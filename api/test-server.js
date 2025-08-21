@@ -1,40 +1,44 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-
-// Configuração do servidor
-const PORT = process.env.PORT || 3000;
-
-const server = http.createServer((req, res) => {
-  // Configurar cabeçalhos CORS para desenvolvimento
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  // Roteamento básico
-  if (req.method === 'GET' && req.url === '/') {
-    fs.readFile(path.join(__dirname, '..', 'index.html'), (err, data) => {
-      if (err) {
-        res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end('Erro ao carregar o arquivo index.html');
-        return;
-      }
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(data);
-    });
-  } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Página não encontrada');
+// api/test-server.js
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método não permitido' });
   }
-});
 
-// Iniciar servidor
-if (require.main === module) {
-  server.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
-    console.log('Pressione Ctrl+C para encerrar o servidor');
-  });
+  try {
+    const { url } = req.body;
+    
+    if (!url) {
+      return res.status(400).json({ error: 'URL não fornecida' });
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+      },
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: 'Erro ao acessar o servidor' });
+    }
+
+    const json = await response.json();
+    
+    if (json.user_info && json.user_info.status === 'Active') {
+      const ts = parseInt(json.user_info.exp_date);
+      let expDate = 'Data não disponível';
+      
+      if (!isNaN(ts)) {
+        const dt = new Date(ts * 1000);
+        expDate = dt.toISOString().slice(0, 19).replace('T', ' ');
+      }
+      
+      return res.status(200).json({ expDate });
+    } else {
+      return res.status(200).json({ expDate: false });
+    }
+  } catch (error) {
+    console.error('Erro na API:', error);
+    return res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 }
-
-// Exportar como função serverless para Vercel
-module.exports = server;

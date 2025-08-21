@@ -1,44 +1,77 @@
-// api/test-server.js
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método não permitido' });
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const url = require('url');
+
+// Configuração do servidor
+const PORT = process.env.PORT || 3000;
+
+const server = http.createServer(async (req, res) => {
+  // Configurar cabeçalhos CORS para desenvolvimento
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Se for uma requisição OPTIONS (preflight), respondemos com sucesso
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200);
+    res.end();
+    return;
   }
 
-  try {
-    const { url } = req.body;
-    
-    if (!url) {
-      return res.status(400).json({ error: 'URL não fornecida' });
-    }
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-      },
-    });
-
-    if (!response.ok) {
-      return res.status(response.status).json({ error: 'Erro ao acessar o servidor' });
-    }
-
-    const json = await response.json();
-    
-    if (json.user_info && json.user_info.status === 'Active') {
-      const ts = parseInt(json.user_info.exp_date);
-      let expDate = 'Data não disponível';
-      
-      if (!isNaN(ts)) {
-        const dt = new Date(ts * 1000);
-        expDate = dt.toISOString().slice(0, 19).replace('T', ' ');
+  // Roteamento básico
+  if (req.method === 'GET' && req.url === '/') {
+    fs.readFile(path.join(__dirname, '..', 'index.html'), (err, data) => {
+      if (err) {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Erro ao carregar o arquivo index.html');
+        return;
       }
-      
-      return res.status(200).json({ expDate });
-    } else {
-      return res.status(200).json({ expDate: false });
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(data);
+    });
+  } else if (req.url.startsWith('/api/proxy')) {
+    // Parse the URL
+    const parsedUrl = url.parse(req.url, true);
+    const { host, username, password } = parsedUrl.query;
+
+    if (!host || !username || !password) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Parâmetros ausentes' }));
+      return;
     }
-  } catch (error) {
-    console.error('Erro na API:', error);
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+
+    // Construir a URL do painel
+    const targetUrl = `http://${host}/player_api.php?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+
+    try {
+      // Fazer a requisição para o painel IPTV
+      const response = await fetch(targetUrl);
+      const data = await response.json();
+
+      // Retornar os dados para o frontend
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(data));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Erro ao fazer requisição' }));
+    }
+  } else {
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Página não encontrada');
   }
+});
+
+// Iniciar servidor
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
+    console.log('Pressione Ctrl+C para encerrar o servidor');
+  });
 }
+
+// Exportar como função serverless para Vercel
+module.exports = (req, res) => {
+  // Vercel serverless function
+  server.emit('request', req, res);
+};
